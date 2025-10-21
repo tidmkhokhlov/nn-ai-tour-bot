@@ -72,7 +72,14 @@ async def process_location_geo(message: Message, state: FSMContext):
 
 @router.message(MainForm.LOCATION)
 async def process_location_text(message: Message, state: FSMContext):
-    await state.update_data(location=message.text)
+    if not await is_valid_location(message.text):
+        await message.answer("😕 Не удалось определить адрес. Попробуйте уточнить")
+        return
+
+    from src.yandex_api import get_coordinates
+    coords = await get_coordinates(message.text)
+
+    await state.update_data(location=f"{coords[0]}, {coords[1]}")
     data = await state.get_data()
     await send_summary(message, data)
 
@@ -83,7 +90,7 @@ async def send_summary(message: Message, data: dict):
     time = data.get("time")
     location = data.get("location")
 
-    request()
+    await request()
 
     await message.answer(
         f"✅ Спасибо! Вот ваши данные:\n\n"
