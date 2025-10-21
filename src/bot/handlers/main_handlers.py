@@ -12,6 +12,7 @@ from aiogram.types import (
 
 from src.bot.states.main_states import MainForm
 from src.llm import request
+from src.bot.utils.check_correct import is_valid_time, is_valid_location
 
 router = Router()
 
@@ -36,6 +37,10 @@ async def process_interests(message: Message, state: FSMContext):
 # Шаг 2 — время
 @router.message(MainForm.TIME)
 async def process_time(message: Message, state: FSMContext):
+    if not is_valid_time(message.text):
+        await message.answer("Некорректное время")
+        return
+
     await state.update_data(time=message.text)
 
     # Кнопка для отправки локации
