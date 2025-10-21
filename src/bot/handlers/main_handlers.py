@@ -5,14 +5,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
     Message,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
     ReplyKeyboardRemove
 )
 
 from src.bot.states.main_states import MainForm
 from src.llm import request
 from src.bot.utils.check_correct import is_valid_time, is_valid_location
+from src.bot.utils.correction import correction_location
+from src.bot.keyboards.user_keyboards import main_keyboard, location_keyboard
 
 router = Router()
 
@@ -21,7 +21,19 @@ router = Router()
 async def start_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "Привет 👋\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)"
+        "Привет 👋\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)",
+        reply_markup=main_keyboard
+    )
+    await state.set_state(MainForm.INTERESTS)
+
+
+# Повторный запуск через кнопку
+@router.message(F.text == "Помоги пж с донашкой..")
+async def start_handler(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        "Рад снова тебя видеть 😀\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)",
+        reply_markup=main_keyboard
     )
     await state.set_state(MainForm.INTERESTS)
 
@@ -42,15 +54,6 @@ async def process_time(message: Message, state: FSMContext):
         return
 
     await state.update_data(time=message.text)
-
-    # Кнопка для отправки локации
-    location_keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="📍 Отправить геопозицию", request_location=True)]
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True
-    )
 
     await message.answer(
         "📍 Отправьте своё текущее местоположение или введите адрес вручную:",
@@ -77,7 +80,7 @@ async def process_location_text(message: Message, state: FSMContext):
         return
 
     from src.yandex_api import get_coordinates
-    coords = await get_coordinates(message.text)
+    coords = await get_coordinates(correction_location(message.text))
 
     await state.update_data(location=f"{coords[0]}, {coords[1]}")
     data = await state.get_data()
@@ -97,7 +100,7 @@ async def send_summary(message: Message, data: dict):
         f"✨ Интересы: {interests}\n"
         f"⏰ Время на прогулку: {time} часов\n"
         f"📍 Местоположение: {location}",
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=main_keyboard
     )
 
 
