@@ -3,6 +3,9 @@ import logging
 import sys
 from os import getenv
 
+from llm import request
+from src.bot.states.main_states import MainForm
+
 from aiogram import Bot, Dispatcher, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
@@ -12,7 +15,6 @@ from aiogram.types import (
     KeyboardButton,
     ReplyKeyboardRemove
 )
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.default import DefaultBotProperties
@@ -25,13 +27,6 @@ TOKEN = getenv("BOT_TOKEN")
 dp = Dispatcher(storage=MemoryStorage())
 
 
-# Состояния формы
-class WalkForm(StatesGroup):
-    interests = State()
-    time = State()
-    location = State()
-
-
 # /start
 @dp.message(CommandStart())
 async def start_handler(message: Message, state: FSMContext):
@@ -39,19 +34,19 @@ async def start_handler(message: Message, state: FSMContext):
     await message.answer(
         "Привет 👋\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)"
     )
-    await state.set_state(WalkForm.interests)
+    await state.set_state(MainForm.INTERESTS)
 
 
 # Шаг 1 — интересы
-@dp.message(WalkForm.interests)
+@dp.message(MainForm.INTERESTS)
 async def process_interests(message: Message, state: FSMContext):
     await state.update_data(interests=message.text)
     await message.answer("⏰ Сколько у вас есть свободного времени на прогулку? (в часах)")
-    await state.set_state(WalkForm.time)
+    await state.set_state(MainForm.TIME)
 
 
 # Шаг 2 — время
-@dp.message(WalkForm.time)
+@dp.message(MainForm.TIME)
 async def process_time(message: Message, state: FSMContext):
     await state.update_data(time=message.text)
 
@@ -68,11 +63,11 @@ async def process_time(message: Message, state: FSMContext):
         "📍 Отправьте своё текущее местоположение или введите адрес вручную:",
         reply_markup=location_keyboard
     )
-    await state.set_state(WalkForm.location)
+    await state.set_state(MainForm.LOCATION)
 
 
 # Шаг 3 — локация (обработка координат или текста)
-@dp.message(WalkForm.location, F.location)
+@dp.message(MainForm.LOCATION, F.location)
 async def process_location_geo(message: Message, state: FSMContext):
     loc = message.location
     coords = f"{loc.latitude}, {loc.longitude}"
@@ -82,7 +77,7 @@ async def process_location_geo(message: Message, state: FSMContext):
     await send_summary(message, data)
 
 
-@dp.message(WalkForm.location)
+@dp.message(MainForm.LOCATION)
 async def process_location_text(message: Message, state: FSMContext):
     await state.update_data(location=message.text)
     data = await state.get_data()
@@ -94,6 +89,8 @@ async def send_summary(message: Message, data: dict):
     interests = data.get("interests")
     time = data.get("time")
     location = data.get("location")
+
+    request()
 
     await message.answer(
         f"✅ Спасибо! Вот ваши данные:\n\n"
