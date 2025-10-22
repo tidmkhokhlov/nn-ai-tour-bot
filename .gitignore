@@ -169,3 +169,6 @@ settings.json
 
 # xlsx
 *.xlsx
+
+# draft
+/draft.py
