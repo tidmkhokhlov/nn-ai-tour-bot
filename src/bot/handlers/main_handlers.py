@@ -12,6 +12,7 @@ from src.bot.states.main_states import MainForm
 from src.llm import request
 from src.bot.utils.check_correct import is_valid_time, is_valid_location
 from src.bot.utils.correction import correction_location
+from src.bot.utils.json_loader import get_phrase
 from src.bot.keyboards.user_keyboards import main_keyboard, location_keyboard
 
 router = Router()
@@ -21,7 +22,7 @@ router = Router()
 async def start_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "Привет 👋\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)",
+        get_phrase("START", "FIRST_FEEL"),
         reply_markup=main_keyboard
     )
     await state.set_state(MainForm.INTERESTS)
@@ -32,7 +33,7 @@ async def start_handler(message: Message, state: FSMContext):
 async def start_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "Рад снова тебя видеть 😀\nДавайте подберём прогулку!\n\n1️⃣ Напиши свои интересы (например: история, стрит-арт, кофейни)",
+        get_phrase("START", "NEW_START"),
         reply_markup=main_keyboard
     )
     await state.set_state(MainForm.INTERESTS)
@@ -42,7 +43,7 @@ async def start_handler(message: Message, state: FSMContext):
 @router.message(MainForm.INTERESTS)
 async def process_interests(message: Message, state: FSMContext):
     await state.update_data(interests=message.text)
-    await message.answer("⏰ Сколько у вас есть свободного времени на прогулку? (в часах)")
+    await message.answer(get_phrase("FORM", "TIME"))
     await state.set_state(MainForm.TIME)
 
 
@@ -56,7 +57,7 @@ async def process_time(message: Message, state: FSMContext):
     await state.update_data(time=message.text)
 
     await message.answer(
-        "📍 Отправьте своё текущее местоположение или введите адрес вручную:",
+        get_phrase("FORM", "LOCATION"),
         reply_markup=location_keyboard
     )
     await state.set_state(MainForm.LOCATION)
