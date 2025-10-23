@@ -132,13 +132,14 @@ async def process_location_text(message: Message, state: FSMContext):
         await message.answer("😕 Не удалось определить адрес. Попробуйте уточнить")
         return
 
-    from src.yandex_api import get_coordinates
+    from src.yandex_api import get_coordinates, get_address
     coords = await get_coordinates(correction_location(message.text))
+    address = await get_address(coords[0], coords[1])
 
     await state.update_data(location=f"{coords[0]}, {coords[1]}")
 
     await message.answer(
-        f"Ваша локация: {coords[0]}, {coords[1]}. Верно?",
+        f"Ваша локация: {address}. Верно?",
         reply_markup=ukb.location_accept_keyboard()
     )
 

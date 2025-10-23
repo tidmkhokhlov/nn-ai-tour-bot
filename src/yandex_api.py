@@ -20,10 +20,30 @@ async def get_coordinates(address: str) -> tuple[float, float] | None:
             data = await resp.json()
 
     try:
-        pos = (
-            data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"]
-        )
+        pos = (data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"])
         lon, lat = map(float, pos.split())
+
         return lat, lon
+    except (KeyError, IndexError, ValueError):
+        return None
+
+async def get_address(lat: float, lot: float) -> str | None:
+    params = {
+        "apikey": YANDEX_API_KEY,
+        "geocode": f"{lot},{lat}",
+        "format": "json"
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(GEOCODER_URL, params=params) as resp:
+            if resp.status != 200:
+                return None
+            data = await resp.json()
+
+    try:
+        pos = (
+            data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["metaDataProperty"]["GeocoderMetaData"]
+        )
+        return pos["text"]
     except (KeyError, IndexError, ValueError):
         return None
