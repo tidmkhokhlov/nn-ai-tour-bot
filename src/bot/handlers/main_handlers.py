@@ -5,7 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
     Message,
-    ReplyKeyboardRemove
+    ReplyKeyboardRemove,
+    CallbackQuery
 )
 
 from src.bot.states.main_states import MainForm
@@ -13,7 +14,7 @@ from src.llm import request
 from src.bot.utils.check_correct import is_valid_time, is_valid_location
 from src.bot.utils.correction import correction_location
 from src.bot.utils.json_loader import get_phrase
-from src.bot.keyboards.user_keyboards import main_keyboard, location_keyboard
+import src.bot.keyboards.user_keyboards as ukb
 
 router = Router()
 
@@ -23,7 +24,7 @@ async def start_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         get_phrase("START", "FIRST_FEEL"),
-        reply_markup=main_keyboard
+        reply_markup=ukb.main_keyboard
     )
     await state.set_state(MainForm.INTERESTS)
 
@@ -34,7 +35,7 @@ async def start_handler(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         get_phrase("START", "NEW_START"),
-        reply_markup=main_keyboard
+        reply_markup=ukb.main_keyboard
     )
     await state.set_state(MainForm.INTERESTS)
 
@@ -43,8 +44,45 @@ async def start_handler(message: Message, state: FSMContext):
 @router.message(MainForm.INTERESTS)
 async def process_interests(message: Message, state: FSMContext):
     await state.update_data(interests=message.text)
-    await message.answer(get_phrase("FORM", "TIME"))
+    await message.answer(
+        f"Ваши интересы: {message.text}",
+        reply_markup=ukb.interests_accept_keyboard()
+    )
+
+@router.callback_query(F.data == "accept_interests")
+async def accept_interests(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await callback.message.answer(get_phrase("FORM", "TIME"))
     await state.set_state(MainForm.TIME)
+
+@router.callback_query(F.data == "add_interests")
+async def add_interests(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await callback.message.answer("Введите ещё интересы:")
+    await state.set_state(MainForm.ADD_INTERESTS)
+
+@router.message(MainForm.ADD_INTERESTS)
+async def process_add_interests(message: Message, state: FSMContext):
+    data = await state.get_data()
+    old_interests = data.get("interests", "")
+
+    if old_interests:
+        new_interests = f"{old_interests}, {message.text}"
+    else:
+        new_interests = message.text
+
+    await state.update_data(interests=new_interests)
+    await message.answer(
+        f"Обновленные интересы: {new_interests}",
+        reply_markup=ukb.interests_accept_keyboard()
+    )
+
+@router.callback_query(F.data == "delete_interests")
+async def delete_interests(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await callback.message.answer("Введите интересы заново:")
+    await state.update_data(interests="")
+    await state.set_state(MainForm.INTERESTS)
 
 
 # Шаг 2 — время
@@ -57,10 +95,23 @@ async def process_time(message: Message, state: FSMContext):
     await state.update_data(time=message.text)
 
     await message.answer(
+        f"Вы выбрали время: {message.text}\nТочно?",
+        reply_markup=ukb.time_accept_keyboard()
+    )
+
+@router.callback_query(F.data == "accept_time")
+async def accept_time(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await callback.message.answer(
         get_phrase("FORM", "LOCATION"),
-        reply_markup=location_keyboard
+        reply_markup=ukb.location_keyboard
     )
     await state.set_state(MainForm.LOCATION)
+
+@router.callback_query(F.data == "change_time")
+async def change_time(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await callback.message.answer("Введите время заново:")
 
 
 # Шаг 3 — локация (обработка координат или текста)
@@ -70,9 +121,10 @@ async def process_location_geo(message: Message, state: FSMContext):
     coords = f"{loc.latitude}, {loc.longitude}"
     await state.update_data(location=coords)
 
-    data = await state.get_data()
-    await send_summary(message, data)
-
+    await message.answer(
+        f"Ваша локация: {coords}. Верно?",
+        reply_markup=ukb.location_accept_keyboard()
+    )
 
 @router.message(MainForm.LOCATION)
 async def process_location_text(message: Message, state: FSMContext):
@@ -84,8 +136,23 @@ async def process_location_text(message: Message, state: FSMContext):
     coords = await get_coordinates(correction_location(message.text))
 
     await state.update_data(location=f"{coords[0]}, {coords[1]}")
+
+    await message.answer(
+        f"Ваша локация: {coords[0]}, {coords[1]}. Верно?",
+        reply_markup=ukb.location_accept_keyboard()
+    )
+
+@router.callback_query(F.data == "accept_location")
+async def accept_location(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
     data = await state.get_data()
-    await send_summary(message, data)
+    await send_summary(callback.message, data)
+
+@router.callback_query(F.data == "change_location")
+async def change_location(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup()
+    await state.update_data(location="")
+    await callback.message.answer("Введите локацию заново:")
 
 
 # Итог
@@ -101,7 +168,7 @@ async def send_summary(message: Message, data: dict):
         f"✨ Интересы: {interests}\n"
         f"⏰ Время на прогулку: {time} часов\n"
         f"📍 Местоположение: {location}",
-        reply_markup=main_keyboard
+        reply_markup=ukb.main_keyboard
     )
 
 
