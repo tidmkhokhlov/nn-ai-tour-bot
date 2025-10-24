@@ -12,7 +12,7 @@ BOT_TOKEN = getenv("BOT_TOKEN")
 
 bot = Bot(
     token=BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN_V2)
 )
 dp = Dispatcher()
 dp.include_router(get_handlers_router())
