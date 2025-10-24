@@ -12,6 +12,7 @@ from src.bot.utils.check_correct import is_valid_time, is_valid_location
 from src.bot.utils.correction import correction_location
 from src.bot.utils.json_loader import get_phrase_data
 import src.bot.keyboards.user_keyboards as ukb
+from src.yandex_api import get_coordinates, get_address
 
 router = Router()
 
@@ -23,10 +24,16 @@ async def start_handler(message: Message, state: FSMContext):
         get_phrase_data("WELCOME", "message"),
         reply_markup=ukb.main_keyboard
     )
-    await state.set_state(MainForm.INTERESTS)
+
+# /help
+@router.message(Command("help"))
+async def help_handler(message: Message):
+    await message.answer(
+        get_phrase_data("CAPABILITIES", "message")
+    )
 
 
-# Повторный запуск через кнопку
+# Начало составления маршрута
 @router.message(F.text == "Составить план прогулки")
 async def start_handler(message: Message, state: FSMContext):
     await state.clear()
@@ -122,9 +129,10 @@ async def process_location_geo(message: Message, state: FSMContext):
     loc = message.location
     coords = f"{loc.latitude}, {loc.longitude}"
     await state.update_data(location=coords)
+    address = await get_address(loc.latitude, loc.longitude)
 
     await message.answer(
-        f"Ваша локация: {coords}. Верно?",
+        f"Ваша локация: {address}. Верно?",
         reply_markup=ukb.location_accept_keyboard(),
         parse_mode=None
     )
@@ -138,7 +146,6 @@ async def process_location_text(message: Message, state: FSMContext):
         )
         return
 
-    from src.yandex_api import get_coordinates, get_address
     coords = await get_coordinates(correction_location(message.text))
     address = await get_address(coords[0], coords[1])
 

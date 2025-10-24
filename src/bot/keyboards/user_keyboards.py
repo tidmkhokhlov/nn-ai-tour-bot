@@ -1,9 +1,11 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from src.bot.utils.json_loader import get_button_text
+
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Составить план прогулки")]
+        [KeyboardButton(text=get_button_text("BUTTONS", "MAKE_PLAN"))]
     ],
     resize_keyboard=True
 )
@@ -19,9 +21,9 @@ location_keyboard = ReplyKeyboardMarkup(
 def interests_accept_keyboard():
     keyboard = InlineKeyboardBuilder()
     choice_list = [
-        ("Все верно", "accept_interests"),
-        ("Добавить ещё интересов", "add_interests"),
-        ("Сбросить интересы", "delete_interests")
+        (get_button_text("BUTTONS", "EVERYTHING_CORRECT"), "accept_interests"),
+        (get_button_text("BUTTONS", "ADD_INTERESTS"), "add_interests"),
+        (get_button_text("BUTTONS", "RESET_INTERESTS"), "delete_interests")
     ]
     for text, callback_data in choice_list:
         keyboard.add(InlineKeyboardButton(text=text, callback_data=callback_data))
@@ -32,8 +34,8 @@ def interests_accept_keyboard():
 def time_accept_keyboard():
     keyboard = InlineKeyboardBuilder()
     choice_list = [
-        ("Далее", "accept_time"),
-        ("Изменить время", "change_time")
+        (get_button_text("BUTTONS", "EVERYTHING_CORRECT"), "accept_time"),
+        (get_button_text("BUTTONS", "CHANGE_TIME"), "change_time")
     ]
     for text, callback_data in choice_list:
         keyboard.add(InlineKeyboardButton(text=text, callback_data=callback_data))
@@ -44,8 +46,8 @@ def time_accept_keyboard():
 def location_accept_keyboard():
     keyboard = InlineKeyboardBuilder()
     choice_list = [
-        ("Да", "accept_location"),
-        ("Изменить место", "change_location")
+        (get_button_text("BUTTONS", "EVERYTHING_CORRECT"), "accept_location"),
+        (get_button_text("BUTTONS", "CHANGE_LOCATION"), "change_location")
     ]
     for text, callback_data in choice_list:
         keyboard.add(InlineKeyboardButton(text=text, callback_data=callback_data))
