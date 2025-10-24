@@ -1,51 +1,51 @@
 {
   "WELCOME": {
     "title": "Приветственный скрипт",
-    "message": "Привет\\!\n\nЯ — Ваш AI\\-помощник для планирования идеальных прогулок по Нижнему Новгороду\\. Я помогу Вам найти интересные места рядом с Вами и составлю персональный маршрут\\.\n\nГотовы покорить родной город Максима Горького, Натальи Водяновой, Марка Эйдельштейна и других знаменитостей\\? Тогда жмите кнопку \"Составить план прогулки\"\\!",
-    "message_en": "Hello, tourist\\! 😊\n\nI am your AI assistant for planning ideal walks around Nizhny Novgorod\\. I will help you find interesting places near you and create a personal itinerary\\.\n\nAre you ready to conquer the hometown of Maxim Gorky, Natalia Vodianova, Mark Edelstein and other celebrities\\? Then click the \"Make a walk plan\" button\\!"
+    "message": "Привет\\!👋\n\nЯ — Ваш AI\\-помощник для планирования идеальных прогулок по Нижнему Новгороду\\. Я помогу Вам найти интересные места рядом с Вами и составлю персональный маршрут\\.\n\n🌟 Готовы покорить родной город Максима Горького, Натальи Водяновой, Марка Эйдельштейна и других знаменитостей\\? Тогда жмите кнопку \"Составить план прогулки\"\\!",
+    "message_en": "Hello, tourist\\! 😊\n\nI am your AI assistant for planning ideal walks around Nizhny Novgorod\\. I will help you find interesting places near you and create a personal itinerary\\.\n\n🌟 Are you ready to conquer the hometown of Maxim Gorky, Natalia Vodianova, Mark Edelstein and other celebrities\\? Then click the \"Make a walk plan\" button\\!"
   },
 
   "CAPABILITIES": {
     "title": "Что умеет бот",
-    "message": "📌 *Что я умею\\?\\.\\.\\.*\n\nXм, давайте расскажу вам по пунктам:\n\n1 — Составляю маршрут от Вашего настоящего местоположения\n2 — Подбираю локации по Вашим интересам \\(история, искусство, спорт, панорамы и многое\\-многое другое\\)\n3 — Рассчитываю время прогулки и создаю таймлайн \\(расписание\\)\n4 — Объясняю, почему каждое место стоит Вашего драгоценного внимания :\\)\n\nПросто нажмите «Составить план прогулки» и я подготовлю для Вас программу Вашего грандиозного путешествия по столице закатов\\!",
-    "message_en": "📌 *What can I do\\?\\.\\.\\.*\n\nHmm, let's tell you point by point:\n\n1 — I'm making up a route from your current location\n2 — I select locations according to your interests \\(history, art, sports, panoramas, and much more\\)\n3 \\- I calculate the time of the walk and create a timeline \\(schedule\\)\n4 — I explain why each place is worth your precious attention :\\)\n\nJust click on \"Make a walking plan\" and I will prepare for you the program of your grand tour of the sunset capital\\!"
+    "message": "🤖 *Что я умею\\?\\.\\.\\.*\n\nXм, давайте расскажу вам по пунктам:\n\n📍 1 — Составляю маршрут от Вашего настоящего местоположения\n🏛️ 2 — Подбираю локации по Вашим интересам \\(история, искусство, спорт, панорамы и многое\\-многое другое\\)\n🕰️ 3 — Рассчитываю время прогулки и создаю таймлайн \\(расписание\\)\n💫 4 — Объясняю, почему каждое место стоит Вашего драгоценного внимания :\\)\n\nПросто нажмите «Составить план прогулки» и я подготовлю для Вас программу Вашего грандиозного путешествия по столице закатов\\! 🌅",
+    "message_en": "🤖 *What can I do\\?\\.\\.\\.*\n\nHmm, let's tell you point by point:\n\n📍 1 — I'm making up a route from your current location\n🏛️ 2 — I select locations according to your interests \\(history, art, sports, panoramas, and much more\\)\n🕰️ 3 — I calculate the time of the walk and create a timeline \\(schedule\\)\n💫 4 — I explain why each place is worth your precious attention :\\)\n\nJust click on \"Make a walking plan\" and I will prepare for you the program of your grand tour of the sunset capital\\! 🌅"
   },
 
   "FORM": {
     "INTERESTS_QUESTION": {
       "title": "Вопрос 1 - Интересы",
-      "message": "*Шаг 1 из 3*\n\n**Расскажи в свободной форме о своих интересах\\.** Чем бы ты хотел заняться\\? Что посмотреть, прогуливаясь по улицам столицы закатов\\?\n\nНапример, можно написать:\n\"мне нравится музыка и современное искусство\", \"обожаю наслаждаться набережными\", \"люблю активный отдых, спорт\\!\" и тому подобное\\.\n\nМожно комбинировать любые интересы\\! Опиши их своими словами\\.",
-      "message_en": "*Step 1 of 3*\n\n**Tell us about your interests in a free form\\.** What would you like to do\\? What to see while walking through the streets of the sunset capital\\?\n\nFor example, you can write:\n\"I like music and modern art,\" \"I love enjoying the embankments,\" \"I love active recreation, sports\\!\" and the like\\.\n\nYou can combine any interests\\! Describe them in your own words\\."
+      "message": "*✨ Шаг 1️⃣ из 3️⃣*\n\n**Расскажи в свободной форме о своих интересах\\.** Чем бы ты хотел заняться\\? Что посмотреть, прогуливаясь по улицам столицы закатов\\?\n\nНапример, можно написать:\n\"мне нравится музыка и современное искусство\", \"обожаю наслаждаться набережными\", \"люблю активный отдых, спорт\\!\" и тому подобное\\.\n\nМожно комбинировать любые интересы\\! Опиши их своими словами\\.",
+      "message_en": "*✨ Step 1️⃣ of 3️⃣*\n\n**Tell us about your interests in a free form\\.** What would you like to do\\? What to see while walking through the streets of the sunset capital\\?\n\nFor example, you can write:\n\"I like music and modern art,\" \"I love enjoying the embankments,\" \"I love active recreation, sports\\!\" and the like\\.\n\nYou can combine any interests\\! Describe them in your own words\\."
     },
 
     "INTERESTS_CONFIRMATION": {
       "title": "Подтверждение интересов",
-      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\nЕсли Вы хотите заново ответить на вопрос — нажмите на кнопку «Сбросить интересы»\nЕсли Вы хотите дополнить ответ — нажмите на кнопку «Добавить ещё интересы»\n\nИ, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно»\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\"",
-      "message_en": "Please confirm your answer\\!\n\nIf you want to answer the question again, click on the \"Reset interests\" button\nIf you want to add to the answer, click on the \"Add more interests\" button\nAnd finally, if you do not want to change the answer, click on the \"That's right\" button\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel"
+      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\n✨ Если Вы хотите заново ответить на вопрос — нажмите на кнопку «Сбросить интересы» 🔄️\n✨ Если Вы хотите дополнить ответ — нажмите на кнопку «Добавить ещё интересы» ➕\n\n✨ И, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно» ✅\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\" ❌",
+      "message_en": "Please confirm your answer\\!\n\n✨ If you want to answer the question again, click on the \"Reset interests\" button 🔄️\n✨ If you want to add to the answer, click on the \"Add more interests\" button ➕\n✨ And finally, if you do not want to change the answer, click on the \"That's right\" button ✅\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel ❌"
     },
 
     "TIME_QUESTION": {
       "title": "Вопрос 2 - Время",
-      "message": "Вау\\! Уже подбираю варианты…\n\n🕰️ *Шаг 2 из 3*\n\nСколько времени Вы хотели бы потратить на сегодняшнюю прогулку по «Карману России»\\?",
-      "message_en": "Wow\\! I'm already looking at variants…\n\n🕰️ *Step 2 of 3*\n\nHow much time would you like to spend on today's walk through the \"Pocket of Russia\"\\?"
+      "message": "Вау\\! Уже подбираю варианты…\n\n🕰️ *Шаг 2️⃣ из 3️⃣*\n\nСколько времени Вы хотели бы потратить на сегодняшнюю прогулку по «Карману России»\\?",
+      "message_en": "Wow\\! I'm already looking at variants…\n\n🕰️ *Step 2️⃣ of 3️⃣*\n\nHow much time would you like to spend on today's walk through the \"Pocket of Russia\"\\?"
     },
 
     "TIME_CONFIRMATION": {
       "title": "Подтверждение времени",
-      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\nЕсли Вы хотите изменить время — нажмите на кнопку «Изменить время»\nИ, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно»\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\"",
-      "message_en": "Please confirm your answer\\!\n\nIf you want to change the time, click on the \"Change time\" button\nAnd finally, if you don't want to change the answer, click on the \"That's right\" button\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel"
+      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\n✨ Если Вы хотите изменить время — нажмите на кнопку «Изменить время» ✏️\n✨ И, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно» ✅\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\" ❌",
+      "message_en": "Please confirm your answer\\!\n\n✨ If you want to change the time, click on the \"Change time\" button ✏️\n✨ And finally, if you don't want to change the answer, click on the \"That's right\" button ✅\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel ❌"
     },
 
     "LOCATION_QUESTION": {
       "title": "Вопрос 3 - Локация",
-      "message": "*Шаг 3 из 3*\n\nПожалуйста, укажите Ваше местоположение, чтобы я мог построить маршрут Вашего грандиозного мини\\-путешествия по столице Поволжья\\.",
-      "message_en": "*Step 3 of 3*\n\nPlease indicate your location so that I can plot the route of your grandiose mini\\-trip around the capital of the Volga region\\."
+      "message": "🌆 *Шаг 3️⃣ из 3️⃣*\n\nПожалуйста, укажите Ваше местоположение, чтобы я мог построить маршрут Вашего грандиозного мини\\-путешествия по столице Поволжья\\.",
+      "message_en": "🌆 *Step 3️⃣ of 3️⃣*\n\nPlease indicate your location so that I can plot the route of your grandiose mini\\-trip around the capital of the Volga region\\."
     },
 
     "LOCATION_CONFIRMATION": {
       "title": "Подтверждение локации",
-      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\nЕсли Вы хотите изменить место— нажмите на кнопку «Изменить место»\nИ, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно»\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\"",
-      "message_en": "Please confirm your answer\\!\n\nIf you want to change the location, click on the \"Change location\" button\nAnd finally, if you don't want to change the answer, click on the \"That's right\" button\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel"
+      "message": "Пожалуйста, подтвердите ваш ответ\\!\n\n✨ Если Вы хотите изменить место— нажмите на кнопку «Изменить место» ✏️\n✨ И, наконец, если Вы не хотите менять ответ — нажмите на кнопку «Все верно»✅\n\nЕсли же хотите отменить процесс подбора плана прогулки по Нижнему — нажмите \"Отмена\" ❌",
+      "message_en": "Please confirm your answer\\!\n\n✨ If you want to change the location, click on the \"Change location\" button ✏️\n✨ And finally, if you don't want to change the answer, click on the \"That's right\" button✅\n\nIf you want to cancel the process of selecting a walking plan for Nizhny Novgorod, click Cancel ❌"
     }
   },
 
@@ -66,19 +66,19 @@
     "MAKE_PLAN_EN": "Make a walk plan",
     "WHAT_CAN_DO": "Что умеет бот?",
     "WHAT_CAN_DO_EN": "What can I do?",
-    "RESET_INTERESTS": "Сбросить интересы",
-    "RESET_INTERESTS_EN": "Reset interests",
-    "ADD_INTERESTS": "Добавить ещё интересы",
-    "ADD_INTERESTS_EN": "Add more interests",
-    "EVERYTHING_CORRECT": "Все верно",
-    "EVERYTHING_CORRECT_EN": "That's right",
+    "RESET_INTERESTS": "Сбросить интересы 🔄️",
+    "RESET_INTERESTS_EN": "Reset interests 🔄️",
+    "ADD_INTERESTS": "Добавить ещё интересы ➕",
+    "ADD_INTERESTS_EN": "Add more interests ➕",
+    "EVERYTHING_CORRECT": "Все верно ✅",
+    "EVERYTHING_CORRECT_EN": "That's right ✅",
     "NEXT_STEP": "Далее",
     "NEXT_STEP_EN": "Next",
-    "CHANGE_TIME": "Изменить время",
-    "CHANGE_TIME_EN": "Change time",
-    "CHANGE_LOCATION": "Изменить место",
-    "CHANGE_LOCATION_EN": "Change location",
-    "CANCEL": "Отмена",
-    "CANCEL_EN": "Cancel"
+    "CHANGE_TIME": "Изменить время ✏️",
+    "CHANGE_TIME_EN": "Change time ✏️",
+    "CHANGE_LOCATION": "Изменить место ✏️",
+    "CHANGE_LOCATION_EN": "Change location ✏️",
+    "CANCEL": "Отмена ❌",
+    "CANCEL_EN": "Cancel ❌"
   }
 }
