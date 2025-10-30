@@ -7,12 +7,12 @@ from aiogram.types import (
 )
 
 from src.bot.states.main_states import MainForm
-from src.llm import request
 from src.bot.utils.check_correct import is_valid_time, is_valid_location
 from src.bot.utils.correction import correction_location
 from src.bot.utils.json_loader import get_phrase_data
 import src.bot.keyboards.user_keyboards as ukb
 from src.yandex_api import get_coordinates, get_address
+from src.gpt_chat import generate_route_result
 
 router = Router()
 
@@ -179,13 +179,10 @@ async def send_summary(message: Message, data: dict):
     time = data.get("time")
     location = data.get("location")
 
-    await request()
+    route_text, ok = generate_route_result(data)
 
     await message.answer(
-        f"✅ Спасибо! Вот ваши данные:\n\n"
-        f"✨ Интересы: {interests}\n"
-        f"⏰ Время на прогулку: {time} часов\n"
-        f"📍 Местоположение: {location}",
+        route_text,
         reply_markup=ukb.main_keyboard,
         parse_mode=None
     )
