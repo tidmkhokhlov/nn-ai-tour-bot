@@ -11,7 +11,7 @@ from src.bot.utils.check_correct import is_valid_time, is_valid_location
 from src.bot.utils.correction import correction_location
 from src.bot.utils.json_loader import get_phrase_data
 import src.bot.keyboards.user_keyboards as ukb
-from src.yandex_api import get_coordinates, get_address
+from src.yandex_api import get_coordinates, get_address, get_map, get_map_route
 from src.gpt_chat import generate_route_result
 
 router = Router()
@@ -179,13 +179,24 @@ async def send_summary(message: Message, data: dict):
     time = data.get("time")
     location = data.get("location")
 
-    route_text, ok = generate_route_result(data)
+    # Генерация маршрута и списка координат
+    route_text, places_coords, ok = generate_route_result(data)
 
+    # Отправляем текст маршрута
     await message.answer(
         route_text,
         reply_markup=ukb.main_keyboard,
         parse_mode=None
     )
+
+    map_url = get_map(places_coords)
+    await message.answer(
+        f"[Посмотреть карту маршрута]({map_url})",
+        reply_markup=ukb.main_keyboard,
+        parse_mode="Markdown"
+    )
+
+
 
 
 

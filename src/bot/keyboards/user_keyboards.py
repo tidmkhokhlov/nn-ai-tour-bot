@@ -10,6 +10,14 @@ main_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+map_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text=get_button_text("BUTTONS", "MAKE_PLAN"))],
+        [KeyboardButton(text="🗺️ Показать на карте")]
+    ],
+    resize_keyboard=True
+)
+
 location_keyboard = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📍 Отправить геопозицию", request_location=True)]

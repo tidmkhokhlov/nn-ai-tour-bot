@@ -46,3 +46,35 @@ async def get_address(lat: float, lon: float) -> str | None:
         return address
     except (KeyError, IndexError, ValueError):
         return None
+
+def get_map(places: list[tuple[float, float]]) -> str:
+    if not places:
+        return "https://yandex.ru/maps"  # fallback, если координат нет
+    points = [f"{lon},{lat}" for lat, lon in places]
+    points_str = "~".join(points)
+    yandex_url = f"https://yandex.ru/maps/?pt={points_str}&z=13&l=map"
+    return yandex_url
+
+
+def get_map_route(places: list[tuple[float, float]]) -> str:
+    """
+    Генерирует ссылку на Яндекс.Карты с маршрутом через все точки.
+    Места подписаны номерами (1, 2, 3…).
+    """
+    if not places:
+        return "https://yandex.ru/maps"  # fallback
+
+    points_with_labels = []
+    for idx, (lat, lon) in enumerate(places, start=1):
+        # Формат: lon,lat,метка с номером
+        points_with_labels.append(f"{lon},{lat},pm2dgl{idx}")
+        # pm2dglN — стандартная метка Яндекс.Карт с номером N
+
+    points_str = "~".join(points_with_labels)
+
+    if len(places) < 3:
+        # Меньше 3 мест — просто метки
+        return f"https://yandex.ru/maps/?pt={points_str}&z=13&l=map"
+
+    # 3 и больше — строим маршрут
+    return f"https://yandex.ru/maps/?rtext={points_str}&rtt=mt&z=13&l=map"

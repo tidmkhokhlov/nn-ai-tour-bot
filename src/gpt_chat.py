@@ -533,7 +533,7 @@ def _gpt_select_best_places(places: List[Dict[str, Any]], interests: str, target
     # Fallback: берем первые target_count
     return places[:target_count]
 
-def generate_route(data, model: str | None = None) -> str:
+def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[float, float]]]:
     """Строит маршрут: места из 2ГИС + GPT выбирает лучшие."""
     interests = (data.get("interests") or "").strip()
     time_hours = float(data.get("time") or 2.0)
@@ -547,7 +547,7 @@ def generate_route(data, model: str | None = None) -> str:
     
     # 2) Собираем МНОГО мест из 2ГИС с разными радиусами
     pool: List[Dict[str, Any]] = []
-    radii = [5000, 10000, 15000]  # 5км, 10км, 15км
+    radii = [5000, 10000]  # 5км, 10км
     
     # Собираем все запросы из всех категорий
     from .categories_config import ALL_CATEGORIES
@@ -562,7 +562,7 @@ def generate_route(data, model: str | None = None) -> str:
     
     # Ищем с разными радиусами для большего охвата
     for radius in radii:
-        for q in all_queries[:10]:  # Ограничим количество запросов
+        for q in all_queries[:5]:  # Ограничим количество запросов
             pool.extend(search_places_2gis_by_query(q, origin=origin, limit=10, radius_m=radius))
     
     # Дедупликация
@@ -707,7 +707,14 @@ def generate_route(data, model: str | None = None) -> str:
     
     # 5) Формируем маршрут
     itinerary = _format_itinerary_from_2gis(shortlist, time_hours=time_hours, start_coords=origin, start_label=location_text or None, debug_info=dbg_lines)
-    
+
+    # 6) Собираем координаты
+    coords_list: list[tuple[float, float]] = []
+    for place in shortlist:
+        c = place.get("coords")
+        if c and isinstance(c, (list, tuple)) and len(c) == 2:
+            coords_list.append((float(c[0]), float(c[1])))
+
     if debug and dbg_lines:
         # Считаем сколько мест попало в финальный маршрут
         final_count = itinerary.count("почему туда:")
@@ -716,15 +723,19 @@ def generate_route(data, model: str | None = None) -> str:
         dbg_lines.append("="*50)
         itinerary += "\n" + "\n".join(dbg_lines)
     
-    return itinerary
+    return itinerary, coords_list
 
 
-def generate_route_result(data, model: str | None = None) -> tuple[str, bool]:
-    """Возвращает (text, ok). ok=False, если мест < 3 либо произошла ошибка подбора."""
+def generate_route_result(data, model: str | None = None) -> tuple[str, list[tuple[float, float]], bool]:
+    """
+    Возвращает (text, coords_list, ok).
+    ok=False, если мест < 3 либо произошла ошибка подбора.
+    """
     try:
-        result = generate_route(data, model)
-        if "Не удалось найти" in result:
-            return (result, False)
-        return (result, True)
+        itinerary, coords_list = generate_route(data, model)
+        if "Не удалось найти" in itinerary or len(coords_list) < 3:
+            return (itinerary, coords_list, False)
+        return (itinerary, coords_list, True)
     except Exception:
-        return ("Не удалось сгенерировать маршрут. Попробуйте ещё раз позднее.", False)
+        return ("Не удалось сгенерировать маршрут. Попробуйте ещё раз позднее.", [], False)
+
