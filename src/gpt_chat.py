@@ -9,7 +9,6 @@ from .categories_config import (
     FOOD_KEYWORDS,
     HEURISTIC_RULES,
     PARK_KEYWORDS,
-    SPECIAL_COMPOUND_RULES,
     SYSTEM_PROMPT,
 )
 
@@ -238,23 +237,18 @@ def _gpt_explain_and_estimate_time(places: List[Dict[str, Any]], interests: str)
 
 def _apply_heuristic_rules(text_lower: str, result: Dict[str, List[str]]) -> None:
     """Применяет эвристические правила для классификации интересов."""
+    def _match(keyword: str) -> bool:
+        if "&" in keyword:
+            parts = [part.strip() for part in keyword.split("&") if part.strip()]
+            return all(part in text_lower for part in parts)
+        return keyword in text_lower
+
     for keywords, category, queries in HEURISTIC_RULES:
-        if any(kw in text_lower for kw in keywords):
+        if any(_match(kw) for kw in keywords):
             if result[category]:
                 result[category] = list(dict.fromkeys(result[category] + queries))
             else:
                 result[category] = queries
-
-    for rule in SPECIAL_COMPOUND_RULES:
-        all_keywords = rule.get("all_keywords", [])
-        any_keywords = rule.get("any_keywords", [])
-        if all(kw in text_lower for kw in all_keywords) and (
-            not any_keywords or any(kw in text_lower for kw in any_keywords)
-        ):
-            category = str(rule.get("category"))
-            queries = list(rule.get("queries", []))
-            existing = result.get(category, [])
-            result[category] = list(dict.fromkeys(existing + queries))
 
 
 def _classify_interests_to_queries(interests: str) -> Dict[str, List[str]]:
@@ -409,7 +403,12 @@ def _gpt_select_best_places(places: List[Dict[str, Any]], interests: str, target
         rubrics = ", ".join(p.get("rubrics", [])) if isinstance(p.get("rubrics"), list) else ""
         rating = p.get("rating")
         rating_str = f" | рейтинг {rating:.1f}" if rating else ""
-        items_text.append(f"{idx}: {nm} | {rubrics}{rating_str}")
+        distance_km = p.get("distance_km")
+        if isinstance(distance_km, (int, float)):
+            distance_str = f" | расстояние {distance_km:.1f} км"
+        else:
+            distance_str = ""
+        items_text.append(f"{idx}: {nm} | {rubrics}{rating_str}{distance_str}")
     
     prompt = (
         f"Интересы пользователя: {interests}\n\n"
@@ -556,6 +555,16 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
             pass
     
     candidates = candidates_filtered
+
+    for place in candidates:
+        coords = place.get("coords")
+        if coords and isinstance(coords, (list, tuple)) and len(coords) == 2:
+            try:
+                place["distance_km"] = _place_distance_km(origin, (float(coords[0]), float(coords[1])))
+            except Exception:
+                place["distance_km"] = None
+        else:
+            place["distance_km"] = None
     
     if len(candidates) < 1:
         return "Не удалось найти достаточно мест по запросу. Уточните интересы или адрес."

@@ -16,6 +16,3 @@ def get_model(default: str = "gpt-4o-mini") -> str:
     """Возвращает имя модели из OPENAI_MODEL или дефолт."""
     return os.getenv("OPENAI_MODEL", default)
 
-def get_system_prompt(default: str = "Ты полезный помощник.") -> str:
-    """Системная подсказка из SYSTEM_PROMPT или дефолт."""
-    return os.getenv("SYSTEM_PROMPT", default)
