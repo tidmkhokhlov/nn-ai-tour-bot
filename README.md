@@ -1,4 +1,5 @@
 # [Gorky Guide](https://t.me/NNAITourBot) - ссылка на бота
+# [Presentation](https://docs.google.com/presentation/d/1m2Mgtgxvwxzj4nGEFLSONLhQ5lFlFBO3vjHYzb1jChU/edit?slide=id.g39ef09e4831_3_0#slide=id.g39ef09e4831_3_0) - ссылка на презентацию
 
 # 🤖 Gorky Guide 
 
