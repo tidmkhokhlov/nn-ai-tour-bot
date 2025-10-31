@@ -22,7 +22,7 @@ def _truncate(s: str, limit: int) -> str:
     if len(s) <= limit:
         return s
     return s[:limit]
-def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float, start_coords: tuple[float, float] | None, start_label: str | None = None, debug_info: List[str] | None = None) -> str:
+def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float, start_coords: tuple[float, float] | None, start_label: str | None = None, debug_info: List[str] | None = None) -> tuple[str, List[int]]:
     """Формирует текстовый маршрут из списка мест 2ГИС."""
     from math import radians, sin, cos, asin, sqrt
 
@@ -67,7 +67,8 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
     places_added = 0
     total_distance_km = 0.0
     
-    for p in places:
+    included_indices: List[int] = []
+    for idx_place, p in enumerate(places):
         name = p.get("name") or "Место"
         address = p.get("address") or "адрес не указан"
         coords = p.get("coords")  # (lat, lon) | None
@@ -139,6 +140,7 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
         prev = coords or prev
         step += 1
         places_added += 1
+        included_indices.append(idx_place)
 
     total_min = total_walk_min + total_stay_min
     total_km = round(total_distance_km, 1)
@@ -152,7 +154,7 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
                 debug_info.append(f"   {s}")
         debug_info.append(f"\n✅ В маршрут вошло: {places_added} из {len(places)} мест")
     
-    return "\n".join(lines)
+    return "\n".join(lines), included_indices
 
 def _gpt_explain_and_estimate_time(places: List[Dict[str, Any]], interests: str) -> tuple[List[str], List[int]]:
     """GPT объясняет выбор мест И определяет время на каждое место."""
@@ -658,11 +660,12 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
         dbg_lines.append(f"Доступно времени: {int(time_hours * 60)} минут")
     
     # 5) Формируем маршрут
-    itinerary = _format_itinerary_from_2gis(shortlist, time_hours=time_hours, start_coords=origin, start_label=start_label, debug_info=dbg_lines)
+    itinerary, included_indices = _format_itinerary_from_2gis(shortlist, time_hours=time_hours, start_coords=origin, start_label=start_label, debug_info=dbg_lines)
 
     # 6) Собираем координаты
     coords_list: list[tuple[float, float]] = []
-    for place in shortlist:
+    for idx in included_indices:
+        place = shortlist[idx]
         c = place.get("coords")
         if c and isinstance(c, (list, tuple)) and len(c) == 2:
             coords_list.append((float(c[0]), float(c[1])))
