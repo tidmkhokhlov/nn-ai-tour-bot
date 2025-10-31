@@ -67,17 +67,17 @@ def _build_base_route_prompt(data) -> str:
         start_point = f"{lat:.6f},{lon:.6f}"
     return (
         "Ты выступаешь как локальный гид по Нижнему Новгороду. Составь персональный план прогулки.\n"
-        "Только чистый текст (никаких *, _, #, `, формул, без разметки и эмодзи).\n\n"
+        "Только чистый текст (никаких *, _, #, `, формул, без разметки). Для каждого пункта используй один уместный эмодзи: ставь его сразу после описания места, без дополнительных смайликов.\n\n"
         "Требования:\n"
         "- 3–5 реальных мест по интересам пользователя;\n"
-        "- для каждого места коротко объясни, почему идём именно туда;\n"
+        "- для каждого места дай увлекательное объяснение выбора без фразы 'почему туда';\n"
         "- предложи последовательный маршрут и таймлайн между этими объектами;\n"
         "- укажи примерное время на месте и примерное время перехода;\n"
         "- минимизируй лишние переходы и учитывай логику пути.\n\n"
         "Формат ответа:\n"
         "Маршрут на X часов\n"
         "Старт: <описание точки старта>\n"
-        "1) Название — почему туда; адрес/ориентир. Время на месте (мин). Переход (мин).\n"
+        "1) Название — краткое пояснение; адрес/ориентир. Время на месте (мин). Переход (мин).\n"
         "2) ...\n"
         "Итого: суммарное время (мин) и примерная длина (км).\n"
         "Советы: 2–3 практичных совета (коротко).\n\n"
@@ -203,7 +203,24 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
         
         travel_desc = f"Переход {travel_min} мин{' (транспорт)' if method == 'транспорт' else ''}"
 
-        lines.append(f"{step}) {name} — почему туда: {reason}. {address}. Время на месте {stay_min} мин. {travel_desc}.")
+        reason_text = str(reason or "Интересное место по вашим запросам").strip()
+        # Забираем один эмодзи в конец, учитывая составные флаги (две литеры)
+        emoji_match = re.search(r"((?:[\U0001F1E6-\U0001F1FF]{2})|[\U0001F000-\U0001FFFF])\s*$", reason_text)
+        if emoji_match:
+            emoji = emoji_match.group(1)
+            reason_text = reason_text[:emoji_match.start()].rstrip()
+            emoji_sep = " "
+        else:
+            emoji = "⭐"
+            emoji_sep = ""
+        reason_text = re.sub(r"[\U0001F000-\U0001FFFF]", "", reason_text).rstrip(",.; ")
+
+        lines.append(
+            f"{step}) {name} — {reason_text}{emoji_sep}{emoji}\n"
+            f"Адрес: {address}\n"
+            f"Время на месте: {stay_min} мин\n"
+            f"Переход: {travel_desc}"
+        )
         prev = coords or prev
         step += 1
         places_added += 1
@@ -213,10 +230,12 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
     lines.append(f"Итого: ~{total_min} мин, ~{total_km} км")
     lines.append("Советы: надевайте удобную обувь; уточняйте часы работы по месту; учитывайте время на транспорт.")
     
-    if debug_info is not None and skipped:
-        debug_info.append(f"\n⚠️ Пропущено мест: {len(skipped)}")
-        for s in skipped:
-            debug_info.append(f"   {s}")
+    if debug_info is not None:
+        if skipped:
+            debug_info.append(f"\n⚠️ Пропущено мест: {len(skipped)}")
+            for s in skipped:
+                debug_info.append(f"   {s}")
+        debug_info.append(f"\n✅ В маршрут вошло: {places_added} из {len(places)} мест")
     
     return "\n".join(lines)
 
@@ -227,15 +246,20 @@ def _gpt_explain_and_estimate_time(places: List[Dict[str, Any]], interests: str)
     bullet_lines = []
     for idx, p in enumerate(places):
         nm = p.get("name") or "Место"
-        rubrics = ", ".join(p.get("rubrics", [])) if isinstance(p.get("rubrics"), list) else (p.get("rubrics") or "")
-        bullet_lines.append(f"{idx+1}. {nm} | рубрики: {rubrics}")
+        rubrics = p.get("rubrics")
+        if isinstance(rubrics, list):
+            rubrics_str = ", ".join([str(r) for r in rubrics if isinstance(r, str)])
+        else:
+            rubrics_str = str(rubrics or "")
+        bullet_lines.append(f"{idx+1}. {nm} | рубрики: {rubrics_str}")
     
     user_prompt = (
         "Ниже список мест для маршрута. Интересы пользователя: "
         + (interests or "общие")
         + ".\n\nДля КАЖДОГО места:\n"
-        "1. Напиши краткое объяснение (20-30 слов), почему вам туда стоит зайти (обращение на 'вы')\n"
+        "1. Напиши краткое объяснение (20-30 слов), почему вам туда стоит зайти (обращение на 'вы', без фразы 'почему туда')\n"
         "2. Оцени, сколько минут нужно провести в этом месте (от 15 до 60 минут)\n\n"
+        "3. Используй один уместный эмодзи: поставь его сразу после пояснения, без дополнительных смайликов\n\n"
         "Примеры времени:\n"
         "- Памятник, скульптура: 10-15 минут\n"
         "- Музей небольшой: 30-40 минут\n"
@@ -283,7 +307,7 @@ def _gpt_explain_and_estimate_time(places: List[Dict[str, Any]], interests: str)
                     # Валидация времени: от 10 до 60 минут
                     if not isinstance(mins, (int, float)) or mins < 10 or mins > 60:
                         mins = 30
-                    explanations.append(expl)
+                    explanations.append(str(expl))
                     times.append(int(mins))
                 else:
                     explanations.append("Интересное место по вашим запросам")
@@ -716,10 +740,6 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
             coords_list.append((float(c[0]), float(c[1])))
 
     if debug and dbg_lines:
-        # Считаем сколько мест попало в финальный маршрут
-        final_count = itinerary.count("почему туда:")
-        dbg_lines.append(f"\n✅ В маршрут вошло: {final_count} из {len(shortlist)} мест")
-        
         dbg_lines.append("="*50)
         itinerary += "\n" + "\n".join(dbg_lines)
     
