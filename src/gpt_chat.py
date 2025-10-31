@@ -1,14 +1,20 @@
 from typing import List, Dict, Any
 import re
 import os
-from .client import get_client, get_model, get_system_prompt
-from .state import store, ChatMessage
+from .client import get_client, get_model
 from .twogis import resolve_origin_2gis, search_places_2gis_by_query
+from .categories_config import (
+    ALL_CATEGORIES,
+    DEFAULT_CATEGORIES,
+    FOOD_KEYWORDS,
+    HEURISTIC_RULES,
+    PARK_KEYWORDS,
+    SPECIAL_COMPOUND_RULES,
+    SYSTEM_PROMPT,
+)
 
 MAX_INPUT_CHARS = 6000
-MAX_OUTPUT_TOKENS_CHAT = 512
 MAX_OUTPUT_TOKENS_ROUTE = 900
-ASSISTED_RAG_ENABLED = os.getenv("ASSISTED_RAG_ENABLED", "1").lower() in ("1", "true", "yes")
 
 
 def _truncate(s: str, limit: int) -> str:
@@ -17,99 +23,6 @@ def _truncate(s: str, limit: int) -> str:
     if len(s) <= limit:
         return s
     return s[:limit]
-def build_messages(user_id: int, user_text: str) -> List[ChatMessage]:
-    """Строим массив сообщений для Chat Completions с учётом истории."""
-    system_msg: ChatMessage = {
-        "role": "system",
-        "content": get_system_prompt(),
-    }
-    history = store.get(user_id)
-    new_user_msg: ChatMessage = {"role": "user", "content": _truncate(user_text, MAX_INPUT_CHARS)}
-
-    # финальный список: system (1 раз), затем предыдущая история, затем новое сообщение
-    messages: List[ChatMessage] = [system_msg] + history + [new_user_msg]
-    return messages
-
-def chat_reply(user_id: int, user_text: str, model: str | None = None) -> str:
-    """Делает запрос в Chat Completions, обновляет историю и возвращает текст ответа."""
-    client = get_client()
-    model_name = model or get_model()
-    messages = build_messages(user_id, user_text)
-
-    resp = client.chat.completions.create(
-        model=model_name,
-        messages=messages,  # type: ignore[arg-type]
-        temperature=0,
-        max_tokens=MAX_OUTPUT_TOKENS_CHAT,
-    )
-    answer = resp.choices[0].message.content or ""
-
-    # Обновляем историю: добавляем текущую user-реплику и ответ ассистента
-    updated_history: List[ChatMessage] = store.get(user_id) + [
-        {"role": "user", "content": user_text},
-        {"role": "assistant", "content": answer},
-    ]
-    store.set(user_id, updated_history)
-    return answer
-
-def reset_history(user_id: int) -> None:
-    store.reset(user_id)
-
-
-def _build_base_route_prompt(data) -> str:
-    interests = _truncate((data.get("interests") or "").strip(), MAX_INPUT_CHARS // 3)
-    time_hours = float(data.get("time"))
-    location_text = _truncate((data.get("location") or "").strip(), MAX_INPUT_CHARS // 3)
-    coords = data.get("location_coords")
-    start_point = location_text
-    if not start_point and coords:
-        lat, lon = coords
-        start_point = f"{lat:.6f},{lon:.6f}"
-    return (
-        "Ты выступаешь как локальный гид по Нижнему Новгороду. Составь персональный план прогулки.\n"
-        "Только чистый текст (никаких *, _, #, `, формул, без разметки). Для каждого пункта используй один уместный эмодзи: ставь его сразу после описания места, без дополнительных смайликов.\n\n"
-        "Требования:\n"
-        "- 3–5 реальных мест по интересам пользователя;\n"
-        "- для каждого места дай увлекательное объяснение выбора без фразы 'почему туда';\n"
-        "- предложи последовательный маршрут и таймлайн между этими объектами;\n"
-        "- укажи примерное время на месте и примерное время перехода;\n"
-        "- минимизируй лишние переходы и учитывай логику пути.\n\n"
-        "Формат ответа:\n"
-        "Маршрут на X часов\n"
-        "Старт: <описание точки старта>\n"
-        "1) Название — краткое пояснение; адрес/ориентир. Время на месте (мин). Переход (мин).\n"
-        "2) ...\n"
-        "Итого: суммарное время (мин) и примерная длина (км).\n"
-        "Советы: 2–3 практичных совета (коротко).\n\n"
-        f"Интересы пользователя: {interests or 'общие'}\n"
-        f"Доступное время: {time_hours} часов\n"
-        f"Стартовая точка: {start_point or 'центр города / популярная локация'}\n"
-        "Включай места по заявленным интересам; если интересы — еда/кафе/рестораны, подбери преимущественно места, где можно поесть."
-    )
-
-
-def _build_catalog_appendix(candidates_text: str) -> str:
-    return candidates_text  # больше не используется, оставлено для совместимости
-
-
-def _is_low_quality_route(text: str) -> bool:
-    s = (text or "").strip()
-    if len(s) < 200:
-        return True
-    lowered = s.lower()
-    bad_markers = [
-        "не могу", "не знаю", "нет данных", "извин", "к сожалению",
-        "я не имею", "как модель", "не удалось", "данные недоступны",
-    ]
-    if any(m in lowered for m in bad_markers):
-        return True
-    # Должно быть хотя бы 3 шага маршрута
-    steps = re.findall(r"\n\s*(?:\d+\)|\d+\.|•|-\s)\s", s)
-    if len(steps) < 3:
-        return True
-    return False
-
-
 def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float, start_coords: tuple[float, float] | None, start_label: str | None = None, debug_info: List[str] | None = None) -> str:
     """Формирует текстовый маршрут из списка мест 2ГИС."""
     from math import radians, sin, cos, asin, sqrt
@@ -204,7 +117,7 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
         travel_desc = f"Переход {travel_min} мин{' (транспорт)' if method == 'транспорт' else ''}"
 
         reason_text = str(reason or "Интересное место по вашим запросам").strip()
-        # Забираем один эмодзи в конец, учитывая составные флаги (две литеры)
+
         emoji_match = re.search(r"((?:[\U0001F1E6-\U0001F1FF]{2})|[\U0001F000-\U0001FFFF])\s*$", reason_text)
         if emoji_match:
             emoji = emoji_match.group(1)
@@ -325,8 +238,6 @@ def _gpt_explain_and_estimate_time(places: List[Dict[str, Any]], interests: str)
 
 def _apply_heuristic_rules(text_lower: str, result: Dict[str, List[str]]) -> None:
     """Применяет эвристические правила для классификации интересов."""
-    from .categories_config import HEURISTIC_RULES
-    
     for keywords, category, queries in HEURISTIC_RULES:
         if any(kw in text_lower for kw in keywords):
             if result[category]:
@@ -334,11 +245,20 @@ def _apply_heuristic_rules(text_lower: str, result: Dict[str, List[str]]) -> Non
             else:
                 result[category] = queries
 
+    for rule in SPECIAL_COMPOUND_RULES:
+        all_keywords = rule.get("all_keywords", [])
+        any_keywords = rule.get("any_keywords", [])
+        if all(kw in text_lower for kw in all_keywords) and (
+            not any_keywords or any(kw in text_lower for kw in any_keywords)
+        ):
+            category = str(rule.get("category"))
+            queries = list(rule.get("queries", []))
+            existing = result.get(category, [])
+            result[category] = list(dict.fromkeys(existing + queries))
+
 
 def _classify_interests_to_queries(interests: str) -> Dict[str, List[str]]:
     """Классифицирует интересы пользователя в поисковые запросы для 2GIS."""
-    from .categories_config import ALL_CATEGORIES, SYSTEM_PROMPT, FOOD_KEYWORDS, DEFAULT_CATEGORIES
-    
     text = str(interests or "").strip()
     client = get_client()
     model_name = get_model()
@@ -377,17 +297,8 @@ def _classify_interests_to_queries(interests: str) -> Dict[str, List[str]]:
     # Применяем правила из конфига
     _apply_heuristic_rules(l, result)
     
-    # Специальные правила
-    # 1. Военная техника (ТОЛЬКО если упоминается "военная" или "военный")
-    if "военн" in l and ("техник" in l or "музей" in l or "оруж" in l):
-        result["history"] = list(dict.fromkeys(result["history"] + ["музей военной техники", "военный музей"]))
-    
-    # 2. Архитектура XX века (требует упоминание "век")
-    if any(x in l for x in ["архитектур", "конструктивизм", "модерн", "советск"]) and "век" in l:
-        result["art"] = list(dict.fromkeys(result["art"] + ["архитектура XX века", "конструктивизм"]))
-    
-    # 3. Еда (НЕ добавляем если пользователь хочет гулять в парках)
-    parks_hit = any(x in l for x in ["парк", "сквер", "сад", "лесопарк", "гуля", "прогул"])
+    # Еда (НЕ добавляем если пользователь хочет гулять в парках)
+    parks_hit = any(x in l for x in PARK_KEYWORDS)
     food_explicit = any(x in l for x in FOOD_KEYWORDS)
     
     if food_explicit and not parks_hit:
@@ -466,19 +377,6 @@ def _filter_unwanted_places(places: List[Dict[str, Any]], allow_food: bool) -> L
         filtered.append(p)
     
     return filtered
-
-
-def _build_interest_signals(interests_text: str) -> Dict[str, bool]:
-    t = (interests_text or "").lower()
-    return {
-        "stroll": any(k in t for k in ["гуля", "прогул", "погуля", "фото-прогул", "walk"]),
-        "food": any(k in t for k in ["еда", "ресто", "кафе", "кофе", "поесть", "вкусн", "бар", "кушать", "перекус"]),
-        "history": "истор" in t,
-        "art": any(k in t for k in ["искус", "галер", "арт", "выстав"]),
-        "views": any(k in t for k in ["панора", "вид", "смотор", "набереж"]),
-        "parks": any(k in t for k in ["парк", "сквер", "сад", "лесопарк"]),
-        "entertainment": any(k in t for k in ["кино", "театр", "клуб", "концерт"]),
-    }
 
 
 def _place_distance_km(a: tuple[float, float] | None, b: tuple[float, float] | None) -> float:
@@ -574,8 +472,6 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
     radii = [5000, 10000]  # 5км, 10км
     
     # Собираем все запросы из всех категорий
-    from .categories_config import ALL_CATEGORIES
-    
     all_queries: List[str] = []
     for cat in ALL_CATEGORIES:
         all_queries.extend(cats.get(cat) or [])
@@ -593,9 +489,13 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
     candidates = _dedupe_places(pool)
     
     # Фильтруем нежелательные места
-    signals = _build_interest_signals(interests)
+    interests_lower = (interests or "").lower()
+    allow_food = bool(cats.get("food"))
+    if not allow_food and any(k in interests_lower for k in FOOD_KEYWORDS):
+        if not any(k in interests_lower for k in PARK_KEYWORDS):
+            allow_food = True
     candidates_before_filter = len(candidates)
-    candidates_filtered = _filter_unwanted_places(candidates, allow_food=signals.get("food", False))
+    candidates_filtered = _filter_unwanted_places(candidates, allow_food=allow_food)
     candidates_after_filter = len(candidates_filtered)
     
     # Для DEBUG
@@ -650,7 +550,7 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
                 if alt_pool:
                     pool.extend(alt_pool)
                     candidates = _dedupe_places(pool)
-                    candidates_filtered = _filter_unwanted_places(candidates, allow_food=signals.get("food", False))
+                    candidates_filtered = _filter_unwanted_places(candidates, allow_food=allow_food)
                     candidates_after_filter = len(candidates_filtered)
         except Exception:
             pass
