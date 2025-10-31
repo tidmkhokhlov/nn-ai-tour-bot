@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Подхватываем переменные окружения из .env (если есть)
+# Подхватываем переменные окружения из .env
 load_dotenv()
 
 def get_client() -> OpenAI:

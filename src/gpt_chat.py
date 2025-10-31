@@ -113,7 +113,10 @@ def _format_itinerary_from_2gis(places: List[Dict[str, Any]], time_hours: float,
         total_stay_min += stay_min
         total_distance_km += distance_km
         
-        travel_desc = f"Переход {travel_min} мин{' (транспорт)' if method == 'транспорт' else ''}"
+        if method == "старт":
+            travel_desc = "0 мин"
+        else:
+            travel_desc = f"{travel_min} мин{' (транспорт)' if method == 'транспорт' else ''}"
 
         reason_text = str(reason or "Интересное место по вашим запросам").strip()
 
@@ -461,6 +464,7 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
     interests = (data.get("interests") or "").strip()
     time_hours = float(data.get("time") or 2.0)
     location_text = (data.get("location") or "").strip()
+    location_label = (data.get("location_label") or "").strip()
     coords = data.get("location_coords")
     start_coords = None
     if isinstance(coords, (tuple, list)) and len(coords) == 2:
@@ -475,6 +479,7 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
                 start_coords = (float(parts[0]), float(parts[1]))
             except ValueError:
                 start_coords = None
+    start_label = location_label or (location_text if location_text and not start_coords else None)
 
     # 1) Классифицируем интересы в поисковые запросы
     cats = _classify_interests_to_queries(interests)
@@ -653,7 +658,7 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
         dbg_lines.append(f"Доступно времени: {int(time_hours * 60)} минут")
     
     # 5) Формируем маршрут
-    itinerary = _format_itinerary_from_2gis(shortlist, time_hours=time_hours, start_coords=origin, start_label=location_text or None, debug_info=dbg_lines)
+    itinerary = _format_itinerary_from_2gis(shortlist, time_hours=time_hours, start_coords=origin, start_label=start_label, debug_info=dbg_lines)
 
     # 6) Собираем координаты
     coords_list: list[tuple[float, float]] = []

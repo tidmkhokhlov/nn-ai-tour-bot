@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 # Все поддерживаемые категории
 ALL_CATEGORIES = [
     "history", "art", "food", "views", "parks", "entertainment",
-    "religion", "sports", "shopping", "kids", "nature", "culture", "nightlife", "education"
+    "religion", "sports", "shopping", "kids", "nature", "culture", "nightlife", "education", "street_art"
 ]
 
 # Правила для heuristic fallback: (ключевые_слова, категория, запросы_для_2gis)
@@ -77,6 +77,10 @@ HEURISTIC_RULES: List[Tuple[List[str], str, List[str]]] = [
     (["образован", "университет", "учеб", "лекци"], "education",
      ["университет", "научный центр", "музей истории"]),
 
+    # Стрит-арт
+    (["стрит-арт", "street art", "графф", "мурал", "муралы", "рисунок на стене"], "street_art",
+     ["стрит-арт", "граффити", "мурал"]),
+
     (["военн&тех", "военн&музе", "военн&оруж"], "history",
      ["музей военной техники", "военный музей"]),
     (["архитектур&век", "конструктивизм", "советск&архитектур", "модерн"], "art",
@@ -98,10 +102,11 @@ DEFAULT_CATEGORIES = {
     "views": ["набережная"],
     "parks": ["парк"],
     "entertainment": ["театр"],
+    "street_art": ["стрит-арт", "граффити"],
 }
 
 SYSTEM_PROMPT = """Ты классифицируешь интересы пользователя в короткие поисковые запросы для 2ГИС (Нижний Новгород).
-Верни ТОЛЬКО JSON с ключами: history, art, food, views, parks, entertainment, religion, sports, shopping, kids, nature, culture, nightlife, education.
+Верни ТОЛЬКО JSON с ключами: history, art, food, views, parks, entertainment, religion, sports, shopping, kids, nature, culture, nightlife, education, street_art.
 Значения — массивы очень коротких русских фраз (1–2 слова) для поиска.
 
 ПРАВИЛА КЛАССИФИКАЦИИ:
@@ -122,6 +127,7 @@ SYSTEM_PROMPT = """Ты классифицируешь интересы поль
 • kids → ['детский парк','аттракционы','зоопарк','детский центр'] — дети, семейный отдых, аттракционы
 • culture → ['театр','библиотека','дом культуры','филармония'] — культура, театры, филармонии
 • education → ['университет','музей истории','научный центр'] — образование, университеты, обучение
+• street_art → ['стрит-арт','граффити','мурал'] — уличное искусство, граффити, художественные муралы
 
 ВАЖНО:
 • 'наука и техника' + 'интерактивный' → entertainment, НЕ history!
