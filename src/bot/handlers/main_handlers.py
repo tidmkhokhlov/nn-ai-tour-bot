@@ -190,7 +190,8 @@ async def send_summary(message: Message, data: dict):
     # 🧭 Уведомляем пользователя, что идёт подбор маршрута
     loading_msg = await message.answer(
         "🧭 Подбираю индивидуальный маршрут... это может занять некоторое время ⏳",
-        reply_markup=ukb.main_keyboard
+        reply_markup=ukb.main_keyboard,
+        parse_mode=None
     )
 
     try:
