@@ -187,22 +187,42 @@ async def send_summary(message: Message, data: dict):
     time = data.get("time")
     location = data.get("location")
 
-    # Генерация маршрута и списка координат
-    route_text, places_coords, ok = generate_route_result(data)
-
-    # Отправляем текст маршрута
-    await message.answer(
-        route_text,
-        reply_markup=ukb.main_keyboard,
-        parse_mode=None
+    # 🧭 Уведомляем пользователя, что идёт подбор маршрута
+    loading_msg = await message.answer(
+        "🧭 Подбираю индивидуальный маршрут... это может занять некоторое время ⏳",
+        reply_markup=ukb.main_keyboard
     )
 
-    map_url = get_map(places_coords)
-    await message.answer(
-        f"[Посмотреть карту маршрута]({map_url})",
-        reply_markup=ukb.main_keyboard,
-        parse_mode="Markdown"
-    )
+    try:
+        # Генерация маршрута и списка координат
+        route_text, places_coords, ok = generate_route_result(data)
+
+        # Удаляем сообщение об ожидании
+        await loading_msg.delete()
+
+        # Отправляем текст маршрута
+        await message.answer(
+            route_text,
+            reply_markup=ukb.main_keyboard,
+            parse_mode=None
+        )
+
+        # Отправляем ссылку на карту (с Markdown-ссылкой)
+        map_url = get_map(places_coords)
+        await message.answer(
+            f"[🗺 Посмотреть карту маршрута]({map_url})",
+            reply_markup=ukb.main_keyboard,
+            parse_mode="Markdown"
+        )
+
+    except Exception as e:
+        # Если что-то пошло не так
+        await loading_msg.edit_text(
+            "😕 Не удалось подобрать маршрут. Попробуйте ещё раз чуть позже."
+        )
+        raise e
+
+
 
 
 
