@@ -421,6 +421,8 @@ def _gpt_select_best_places(places: List[Dict[str, Any]], interests: str, target
         "- НЕ выбирай административные здания (офисы Газпрома, банков, компаний)\n"
         "- НЕ выбирай технические объекты (подстанции, котельные, диспетчерские)\n"
         "- Учитывай рейтинг мест\n"
+        "- ПРИОРИТЕТ: места ДОЛЖНЫ быть ближе к начальной точке. Сначала выбирай варианты с расстоянием до 5 км, допускай до 10 км только если очень подходит.\n"
+        "- Старайся избегать точек дальше 5 км (если есть ближе) — они должны попадать в выбор если это популярные места, которые обязательно должны быть в маршруте или если эти места лучше, чем те, что поблизости.\n"
         "- СТАРАЙСЯ выбирать места, расположенные РЯДОМ друг с другом (компактный маршрут)\n"
         "- Избегай мест, которые находятся в разных концах города\n\n"
         f"Верни JSON-массив из {target_count} индексов (от 0 до {len(places)-1}) в порядке приоритета.\n"
@@ -460,7 +462,19 @@ def generate_route(data, model: str | None = None) -> tuple[str, list[tuple[floa
     time_hours = float(data.get("time") or 2.0)
     location_text = (data.get("location") or "").strip()
     coords = data.get("location_coords")
-    start_coords = coords if isinstance(coords, tuple) else None
+    start_coords = None
+    if isinstance(coords, (tuple, list)) and len(coords) == 2:
+        try:
+            start_coords = (float(coords[0]), float(coords[1]))
+        except (TypeError, ValueError):
+            start_coords = None
+    if not start_coords and location_text:
+        parts = [p.strip() for p in location_text.split(",")]
+        if len(parts) == 2:
+            try:
+                start_coords = (float(parts[0]), float(parts[1]))
+            except ValueError:
+                start_coords = None
 
     # 1) Классифицируем интересы в поисковые запросы
     cats = _classify_interests_to_queries(interests)

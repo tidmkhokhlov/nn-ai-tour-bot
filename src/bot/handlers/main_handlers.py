@@ -128,7 +128,7 @@ async def change_time(callback: CallbackQuery, state: FSMContext):
 async def process_location_geo(message: Message, state: FSMContext):
     loc = message.location
     coords = f"{loc.latitude}, {loc.longitude}"
-    await state.update_data(location=coords)
+    await state.update_data(location=coords, location_coords=(loc.latitude, loc.longitude))
     address = await get_address(loc.latitude, loc.longitude)
 
     await message.answer(
@@ -149,7 +149,7 @@ async def process_location_text(message: Message, state: FSMContext):
     coords = await get_coordinates(correction_location(message.text))
     address = await get_address(coords[0], coords[1])
 
-    await state.update_data(location=f"{coords[0]}, {coords[1]}")
+    await state.update_data(location=f"{coords[0]}, {coords[1]}", location_coords=(coords[0], coords[1]))
 
     await message.answer(
         f"Ваша локация: {address}. Верно?",
@@ -166,7 +166,7 @@ async def accept_location(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "change_location")
 async def change_location(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_reply_markup()
-    await state.update_data(location="")
+    await state.update_data(location="", location_coords=None)
     await callback.message.answer(
         "Введите локацию заново:",
         parse_mode=None
